@@ -1,9 +1,10 @@
+import module_scan.tool.AppInputReader as AppInputReader
 from module_scan.app.API import API
-from module_scan.app.FileRebuild import FileRebuild
-from module_scan.app.FileHook import Watcher
-from module_scan.tool.Logging import Log
 from module_scan.app.Config import Config
 from module_scan.app.Dlist import Dlist
+from module_scan.app.FileHook import Watcher
+from module_scan.app.FileRebuild import FileRebuild
+from module_scan.tool.Logging import Log
 
 
 class SCAN:
@@ -72,3 +73,7 @@ class SCAN:
         :return:
         """
         self.dlist.hook_time_over()
+
+
+def read_folders():
+    return AppInputReader.collect_folders()

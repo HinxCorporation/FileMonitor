@@ -18,6 +18,12 @@ def comparison_function(is_file, file_path):
 
 
 if __name__ == '__main__':
+
+    # 读取到有效的文件夹列表
+    folders = module_scan.read_folders()
+    for folder in folders:
+        print(f'work {folder}')
+
     # 初始化配置模块
     INIReader("config.ini")
     # 初始化扫描模块

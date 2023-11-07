@@ -1,0 +1,14 @@
+# 注释内容将被忽略
+# DSM Files for example (UNC)
+/volume1/homes
+/volume1/photos
+
+# Windows files (Drive)
+F:\Medias\photos
+F:\Medias\Greps
+
+# relative
+./testDir
+
+# 下级树标识 '&' (返回Medias下面的所有目录,不用手动一个个记录)
+&F:\Medias
