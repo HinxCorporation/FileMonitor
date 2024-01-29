@@ -19,7 +19,7 @@ def get_global_db(sqlite_db_path='sys.db') -> ConfigManager:
     """
     global SystemDB
     if SystemDB is None:
-        SystemDB = ConfigManager('sys.db')
+        SystemDB = ConfigManager(sqlite_db_path)
     return SystemDB
 
 
@@ -98,6 +98,12 @@ if __name__ == '__main__':
     """
     worker = DlistWorker()
     test_file = 'dlist/rebuild_0.dlist.done'
-    # test_file = 'dlist/update_0.dlist.done'
+
+    # 内容如下
+    # {"op": "insert", "is_file": false, "path": "F:\\Root\\volume-Files\\History_01",
+    # "cid": "43ee314e9fac1a405ac5394426076171"}
+    # {"op": "insert", "is_file": true,
+    # "path": "F:\\Root\\volume-Files\\History_01\\table.xlsx", "cid": "000"}
+
     worker.i_process_file(test_file)
     Log.logger.info('Debug finished.')

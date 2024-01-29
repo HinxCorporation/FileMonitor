@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 /testDir/
 /log/
+/logs/
 /dlist/
 .idea
 .ignore
