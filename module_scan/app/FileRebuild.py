@@ -1,6 +1,6 @@
-from module_scan.tool.Progress import Progress
-from module_scan.tool.FileTool import cul_file_comparison_id, get_str_md5
-from module_scan.tool.Logging import Log
+from tool.Progress import Progress
+from tool.FileTool import cul_file_comparison_id, get_str_md5
+from tool.Logging import Log
 from module_scan.app.Dlist import Dlist
 from module_scan.app.API import API
 from module_scan.app.Config import Config

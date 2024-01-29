@@ -1,0 +1,15 @@
+[dbs]
+path = I:\Files\outputs_1
+test_file = files.db
+
+[mysql]
+host = 127.0.0.1
+port = 3306
+database = media
+user = dao
+passwd = 12345678.abc
+
+[Global]
+Separate_DB = False
+MaxOfPart = 1000000
+BatchSize = 1000

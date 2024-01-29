@@ -1,12 +1,11 @@
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from module_scan.tool.Logging import Log
+from tool.Logging import Log
 from module_scan.app.Config import Config
-from module_scan.tool.FileTool import cul_file_comparison_id
+from tool.FileTool import cul_file_comparison_id
 from module_scan.app.Dlist import Dlist
 
-import os.path
 import json
 
 

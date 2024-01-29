@@ -1,9 +1,10 @@
-import logging
-import colorlog
 import datetime
+import logging
 import os
 
-from module_scan.app.Config import Config
+import colorlog
+
+from Config import config
 
 
 class Log:
@@ -41,13 +42,13 @@ class Log:
         }
 
         Log.logger = logging.getLogger()
-        Log.logger.setLevel(Config.LOG_LEVEL)
+        Log.logger.setLevel(config.get_log_level())
 
         root_path = os.getcwd()
         file_name = datetime.datetime.now().strftime('%Y%m%d_%H%M%S') + ".log"
         log_path = os.path.join(root_path, r"log", file_name)
 
-        # create log folder if it not exist.
+        # create log folder if it is not exist.
         log_dir = os.path.dirname(log_path)
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
