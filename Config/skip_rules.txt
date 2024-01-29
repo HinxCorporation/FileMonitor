@@ -1,0 +1,3 @@
+# ignore eaDir folder (dsm)
+@eaDir
+\*eaDir\*
