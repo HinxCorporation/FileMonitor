@@ -162,3 +162,5 @@ cython_debug/
 /log/
 /dlist/
 .idea
+.ignore
+sys.db
