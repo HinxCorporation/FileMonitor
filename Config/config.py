@@ -79,4 +79,4 @@ def set_log_level(level):
 
 
 def get_log_level():
-    return cfg.getint('Global', 'BatchSize')
+    return cfg.getint('Global', 'LogLevel')

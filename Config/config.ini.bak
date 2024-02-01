@@ -13,3 +13,4 @@ passwd = 12345678.abc
 Separate_DB = False
 MaxOfPart = 1000000
 BatchSize = 1000
+LogLevel = 20

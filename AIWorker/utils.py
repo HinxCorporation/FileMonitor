@@ -275,6 +275,9 @@ def get_table_name(file, prefix='_auto_'):
 
 
 if __name__ == '__main__':
+    """
+    Test method.
+    """
     dir_path = "D:/Files/Folder"
     level_1 = get_folder_level(dir_path, 1)
     level_2 = get_folder_level(dir_path, 2)

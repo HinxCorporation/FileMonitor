@@ -4,7 +4,7 @@ import signal
 import time
 
 import AIWorker.BaseWorkerAbstract as Worker
-import utils as util
+import AIWorker.utils as util
 from AIWorker.ConfigManager import ConfigManager
 from AIWorker.MysqlWorker import MysqlWorker
 from tool.Logging import Log
@@ -70,6 +70,9 @@ class DlistWorker:
             Log.logger.info('No dlist files to process')
 
     def i_process_file(self, nextfile):
+        """
+        从给定的文件中读行,随记处理每一行命令
+        """
         with open(nextfile, 'r') as file:
             for line in file.readlines():
                 data = json.loads(line.strip())
@@ -97,9 +100,9 @@ if __name__ == '__main__':
     这是Dlist worker的测试程序.
     """
     worker = DlistWorker()
-    test_file = 'dlist/rebuild_0.dlist.done'
+    test_file = 'dlist/update_0.dlist.done'
 
-    # 内容如下
+    # 测试内容如下
     # {"op": "insert", "is_file": false, "path": "F:\\Root\\volume-Files\\History_01",
     # "cid": "43ee314e9fac1a405ac5394426076171"}
     # {"op": "insert", "is_file": true,
