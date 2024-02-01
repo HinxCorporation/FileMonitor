@@ -83,6 +83,7 @@ class MysqlWorker(BaseWorkerAbstract):
         try:
             file_data_list = []
             pids = set()
+            touched_folders = set()
 
             def collect_data(_file_path: str):
                 _data = utils.collect_file_data_ai_worker(_file_path)
@@ -97,15 +98,23 @@ class MysqlWorker(BaseWorkerAbstract):
                 file_data_list.append(collect_data(op_path))
             else:
                 # def a handler method to travel a folder
+                tqs = tqdm(desc=f"Collecting files")
+
                 def travel_folder(path):
+                    if os.path.basename(path) == '@eaDir':
+                        return
+                    if path not in touched_folders:
+                        touched_folders.add(path)
                     for entry in os.scandir(path):
                         if entry.is_file():
+                            tqs.update(1)
                             file_data_list.append(collect_data(entry.path))
                         else:
                             travel_folder(entry.path)
-
+                Log.logger.info('begin travel folder and collect files')
                 # travel folder a collect all datas under that folders
                 travel_folder(op_path)
+                tqs.close()
 
             if not self.check_partition_exist(pids):
                 Log.logger.error(f"Error Create Partitions , Could not Continue.")
@@ -139,9 +148,29 @@ class MysqlWorker(BaseWorkerAbstract):
 
             Log.logger.info(
                 f"su processed {operation} op for {'file' if is_file else 'folder'} at '{op_path}'")
+
+            # list all touched folders
+            abs_path = os.path.abspath(op_path)
+            if op_path.startswith('/'):
+                folders = abs_path.split('/')
+            else:
+                folders = abs_path.split(os.path.sep)
+            max_level = len(folders) - 1
+            for level in range(max_level):
+                if op_path.startswith('/'):
+                    level_url = os.path.join('/', *folders[:level + 1])
+                else:
+                    level_url = os.path.join(*folders[:level + 1])
+                if level_url not in touched_folders:
+                    touched_folders.add(level_url)
+            # out print, it
+            for folder in touched_folders:
+                Log.logger.warning(f'-> touch: {folder}')
+
         except Error as e:
-            Log.logger.error(f"Error in process_line: {e}")
+            Log.logger.error(f"failure processed {operation} op for {'file' if is_file else 'folder'} at '{op_path}'")
             self.transaction_rollback()
+            return False
         return True
 
     def load_server_partitions(self):
@@ -264,10 +293,14 @@ class MysqlWorker(BaseWorkerAbstract):
             return q_effected_rows, q_not_effected_rows
 
     def execute_batch(self, batch_commands):
+        """
+        批量处理任务
+        """
+        errors = set()
+        q_effected_rows = 0
+        q_not_effected_rows = 0
         if self.connection and self.connection.is_connected():
             cursor = self.connection.cursor()
-            q_effected_rows = 0
-            q_not_effected_rows = 0
             try:
                 for query, data in batch_commands:
                     try:
@@ -278,14 +311,18 @@ class MysqlWorker(BaseWorkerAbstract):
                             q_effected_rows += 1
                         cursor.fetchall()
                     except Error as e:
-                        Log.logger.error(f"exe error: {e}\n{data}")
+                        # Log.logger.error()
+                        errors.add(f"exe error: {e}\n{data}")
                 self.connection.commit()
             except Error as e:
-                Log.logger.error(f"Error in execute_batch: {e}")
+                # Log.logger.error(f"Error in execute_batch: {e}")
+                errors.add(f"Error in execute_batch: {e}")
                 self.transaction_rollback()
             finally:
-                Log.logger.info(f"update {q_not_effected_rows} and ignore {q_not_effected_rows} files")
+                # 这一行会频繁打断 插入操作
+                # Log.logger.info(f"update {q_not_effected_rows} and ignore {q_not_effected_rows} files")
                 cursor.close()
+        return q_effected_rows, q_not_effected_rows, errors
 
     def close(self):
         if self.connection and self.connection.is_connected():
