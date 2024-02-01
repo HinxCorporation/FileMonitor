@@ -1,6 +1,6 @@
 import sqlite3
 
-import Queries.sqlite_queries as sqlite_queries
+import AIWorker.Queries.sqlite_queries as sqlite_queries
 
 
 class ConfigManager:
