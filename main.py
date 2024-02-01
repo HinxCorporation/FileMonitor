@@ -1,5 +1,6 @@
 import time
 
+import AIWorker
 import module_scan
 from INIReader import INIReader
 
@@ -15,6 +16,15 @@ def comparison_function(is_file, file_path):
         return "A"
     else:
         return "B"
+
+
+def run_dlist_worker():
+    """
+    开始处理Dlist列表, worker内置循环可以新线程执行
+    """
+    dlist_worker = AIWorker.DlistWorker()
+    dlist_worker.run()
+    dlist_worker.close()
 
 
 if __name__ == '__main__':
