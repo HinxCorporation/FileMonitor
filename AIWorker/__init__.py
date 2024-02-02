@@ -6,8 +6,8 @@ import time
 import AIWorker.BaseWorkerAbstract as Worker
 import AIWorker.utils as util
 from tool.Logging import Log
-from .ConfigManager import ConfigManager
-from .MysqlWorker import MysqlWorker
+from AIWorker.ConfigManager import ConfigManager
+from AIWorker.MysqlWorker import MysqlWorker
 
 SystemDB = None
 
