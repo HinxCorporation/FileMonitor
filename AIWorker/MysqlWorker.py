@@ -22,6 +22,7 @@ class MysqlWorker(BaseWorkerAbstract):
         self.batch_size = 1000
         self.pm: PartitionManager
         self.pm = None
+        self.alive = True
 
     def init(self):
         self.reconnect()
@@ -111,6 +112,7 @@ class MysqlWorker(BaseWorkerAbstract):
                             file_data_list.append(collect_data(entry.path))
                         else:
                             travel_folder(entry.path)
+
                 Log.logger.info('begin travel folder and collect files')
                 # travel folder a collect all datas under that folders
                 travel_folder(op_path)
@@ -210,6 +212,8 @@ class MysqlWorker(BaseWorkerAbstract):
         # for file_data in file_data_list:
         for file_data in tqdm(file_data_list, desc=f"insert {len(file_data_list)}", total=len(file_data_list),
                               unit='queries'):
+            if not self.work_state_check():
+                break
             insert_collections.append((mq.INSERT_DATA, file_data))
             commit_count += 1
             if commit_count % batch_size == 0:
@@ -228,7 +232,8 @@ class MysqlWorker(BaseWorkerAbstract):
         query_not_effected = 0  # not effected
         for file_data in tqdm(file_data_list, desc=f"update {len(file_data_list)}", total=len(file_data_list),
                               unit='queries'):
-
+            if not self.work_state_check():
+                break
             if self.connection and self.connection.is_connected():
                 try:
                     # Assuming storage_id and partition_id are at these indices
@@ -250,6 +255,8 @@ class MysqlWorker(BaseWorkerAbstract):
                             Log.logger.error(f"Error in optimize update: {e}")
                     # Perform batch operations in chunks
                     if len(batch_operations) >= self.batch_size:
+                        if not self.work_state_check():
+                            break
                         a, b = self.execute_batch_operations(batch_operations)
                         query_effected += a
                         query_not_effected += b
@@ -260,14 +267,23 @@ class MysqlWorker(BaseWorkerAbstract):
                     self.transaction_rollback()
 
         # Process any remaining operations
-        if batch_operations:
-            a, b = self.execute_batch_operations(batch_operations)
-            query_effected += a
-            query_not_effected += b
-        if query_effected > 0:
-            Log.logger.info(f"update {query_effected} and ignore {query_not_effected} files")
-        else:
-            Log.logger.info(f"ignore {query_not_effected} files")
+        if self.work_state_check():
+            if batch_operations:
+                a, b = self.execute_batch_operations(batch_operations)
+                query_effected += a
+                query_not_effected += b
+            if query_effected > 0:
+                Log.logger.info(f"update {query_effected} and ignore {query_not_effected} files")
+            else:
+                Log.logger.info(f"ignore {query_not_effected} files")
+
+    def work_state_check(self):
+        """
+        check worker is alive and could continue work.
+        """
+        if not self.alive:
+            Log.logger.error('worker died.')
+        return self.alive
 
     def execute_batch_operations(self, batch_operations):
         q_effected_rows = 0
@@ -385,6 +401,10 @@ class MysqlWorker(BaseWorkerAbstract):
         # Rollback the current transaction in case of an error
         if self.connection:
             self.connection.rollback()
+
+    def kill(self):
+        Log.logger.warning("MySql Worker has been killed.")
+        self.alive = False
 
     def finish(self):
         Log.logger.info("Finished one dlist job")

@@ -56,6 +56,13 @@ class BaseWorkerAbstract:
         pass
 
     @abc.abstractmethod
+    def kill(self):
+        """
+        break all processes
+        """
+        pass
+
+    @abc.abstractmethod
     def finish(self):
         """
         finish a line job for dlist
