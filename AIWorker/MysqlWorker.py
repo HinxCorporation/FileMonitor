@@ -218,10 +218,14 @@ class MysqlWorker(BaseWorkerAbstract):
             insert_collections.append((mq.INSERT_DATA, file_data))
             commit_count += 1
             if commit_count % batch_size == 0:
+                if not self.work_state_check():
+                    return
                 self.execute_batch(insert_collections)
                 insert_collections.clear()
 
         # commit the rest
+        if not self.work_state_check():
+            return
         if commit_count % batch_size != 0:
             self.execute_batch(insert_collections)
             insert_collections.clear()
@@ -334,6 +338,9 @@ class MysqlWorker(BaseWorkerAbstract):
             except Error as e:
                 # Log.logger.error(f"Error in execute_batch: {e}")
                 errors.add(f"Error in execute_batch: {e}")
+                self.transaction_rollback()
+            except Exception as e:
+                errors.add(f"Exception: {e}")
                 self.transaction_rollback()
             finally:
                 # 这一行会频繁打断 插入操作
