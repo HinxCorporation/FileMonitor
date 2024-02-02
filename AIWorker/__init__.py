@@ -5,9 +5,9 @@ import time
 
 import AIWorker.BaseWorkerAbstract as Worker
 import AIWorker.utils as util
+from tool.Logging import Log
 from .ConfigManager import ConfigManager
 from .MysqlWorker import MysqlWorker
-from tool.Logging import Log
 
 SystemDB = None
 
@@ -87,6 +87,7 @@ class DlistWorker:
     def graceful_shutdown(self, signum, frame):
         Log.logger.info('Gracefully shutting down')
         self.running = False
+        self.worker.kill()
         self.worker.close()
 
     def close(self):
