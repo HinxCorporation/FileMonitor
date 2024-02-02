@@ -98,8 +98,10 @@ class MysqlWorker(BaseWorkerAbstract):
             if is_file:
                 file_data_list.append(collect_data(op_path))
             else:
+
+                Log.logger.info('begin travel folder and collect files')
                 # def a handler method to travel a folder
-                tqs = tqdm(desc=f"Collecting files")
+                tqs = tqdm(desc=f"Collecting files", unit=' fs')
 
                 def travel_folder(path):
                     if os.path.basename(path) == '@eaDir':
@@ -113,7 +115,6 @@ class MysqlWorker(BaseWorkerAbstract):
                         else:
                             travel_folder(entry.path)
 
-                Log.logger.info('begin travel folder and collect files')
                 # travel folder a collect all datas under that folders
                 travel_folder(op_path)
                 tqs.close()

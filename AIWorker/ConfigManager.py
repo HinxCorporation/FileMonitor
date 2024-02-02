@@ -13,11 +13,12 @@ class ConfigManager:
         self.conn.execute(sqlite_queries.CREATE_CONFIG_TABLE)
         self.conn.commit()
 
-    def get(self, key):
+    def get(self, key) -> (str, str):
         cursor = self.conn.cursor()
         cursor.execute(sqlite_queries.GET_CONFIG, (key,))
         row = cursor.fetchone()
-        return row if row else (None, None)
+        # return value , desc
+        return row if row else ('', 'not found')
 
     def set(self, key, value, desc):
         cursor = self.conn.cursor()
