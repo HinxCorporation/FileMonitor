@@ -1,7 +1,7 @@
 import time
-
 import AIWorker
 import module_scan
+from tool.FolderTree import FolderTree
 from INIReader import INIReader
 
 
@@ -31,14 +31,21 @@ if __name__ == '__main__':
 
     # 读取到有效的文件夹列表
     folders = module_scan.read_folders()
+    # 初始化文件夹树
+    folder_tree = FolderTree()
+    # 遍历配置中读取并处理后的文件夹列表
     for folder in folders:
+        # 文件夹地址入树
+        folder_tree.add_folder_to_tree(folder)
         print(f'work {folder}')
+    # 获取精简后的文件夹地址
+    folder_list = folder_tree.get_monitor_folders()
 
     # 初始化配置模块
     INIReader("config.ini")
     # 初始化扫描模块
     module_scan = module_scan.SCAN(
-        monitor_dir=INIReader.get_monitor_dir(),
+        monitor_dir=folder_list,
         log_dir=INIReader.get_log_dir(),
         dlist_dir=INIReader.get_dlist_dir(),
         comparison_function=comparison_function,

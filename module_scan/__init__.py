@@ -1,6 +1,6 @@
 import tool.AppInputReader as AppInputReader
 from module_scan.app.API import API
-# from module_scan.app.Config import Config
+from module_scan.app.Config import Config
 from module_scan.app.Dlist import Dlist
 from module_scan.app.FileHook import Watcher
 from module_scan.app.FileRebuild import FileRebuild

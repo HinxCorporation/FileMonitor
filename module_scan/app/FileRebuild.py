@@ -27,6 +27,7 @@ class FileRebuild:
         :return: 文件与文件夹总数
         """
         progress = Progress(total=0, desc='统计文件数量', unit='file', unit_divisor=1000, unit_scale=True)
+
         # 内嵌方法
         def travel(folder):
             """
@@ -48,8 +49,14 @@ class FileRebuild:
                     sel_fileCount += 1
             # 返回这个文件夹的文件与文件夹总数
             return sel_fileCount, sel_folderCount
+
         # 开始计算
-        file_count, dir_count = travel(Config.MONITOR_DIR)
+        file_count = 0
+        dir_count = 0
+        for folder_path in Config.MONITOR_DIR:
+            file_cnt, dir_cnt = travel(folder_path)
+            file_count += file_cnt
+            dir_count += dir_cnt
         # 结束进度
         progress.close()
         # 返回文件与文件夹总数
@@ -73,31 +80,32 @@ class FileRebuild:
         dlist.rebuild_start()
         # 遍历文件夹
         Log.logger.info("开始遍历文件夹:")
-        for root, dirs, files in os.walk(Config.MONITOR_DIR):
-            # 获得此文件夹所有文件的cid
-            inner_files_cid = []
-            for file in files:
-                inner_files_cid.append(cul_file_comparison_id(os.path.join(root, file)))
-            #  计算这个文件夹的cid
-            new_dir_cid = get_str_md5("".join(inner_files_cid))
-            # 将文件夹信息提交至任务
-            task_info = {
-                "op": "create",
-                "is_file": False,
-                "path": root,
-                "cid": new_dir_cid
-            }
-            dlist.rebuild_append(json.dumps(task_info))
-            # 将此文件夹下所有文件提交至任务
-            for file in files:
+        for folder_path in Config.MONITOR_DIR:
+            for root, dirs, files in os.walk(folder_path):
+                # 获得此文件夹所有文件的cid
+                inner_files_cid = []
+                for file in files:
+                    inner_files_cid.append(cul_file_comparison_id(os.path.join(root, file)))
+                #  计算这个文件夹的cid
+                new_dir_cid = get_str_md5("".join(inner_files_cid))
+                # 将文件夹信息提交至任务
                 task_info = {
                     "op": "create",
-                    "is_file": True,
-                    "path": os.path.join(root, file),
-                    "cid": cul_file_comparison_id(os.path.join(root, file))
+                    "is_file": False,
+                    "path": root,
+                    "cid": new_dir_cid
                 }
                 dlist.rebuild_append(json.dumps(task_info))
-                progress.update(1)
+                # 将此文件夹下所有文件提交至任务
+                for file in files:
+                    task_info = {
+                        "op": "create",
+                        "is_file": True,
+                        "path": os.path.join(root, file),
+                        "cid": cul_file_comparison_id(os.path.join(root, file))
+                    }
+                    dlist.rebuild_append(json.dumps(task_info))
+                    progress.update(1)
         Log.logger.info("遍历完成！")
         progress.close()
         dlist.rebuild_over()
@@ -120,42 +128,42 @@ class FileRebuild:
         # 开启dlist的rebuild
         dlist.rebuild_start()
         # 开始遍历
-        for root, dirs, files in os.walk(Config.MONITOR_DIR):
-            # 获取此文件夹下所有文件的cid
-            inner_files_cid = []
-            for file in files:
-                inner_files_cid.append(cul_file_comparison_id(os.path.join(root, file)))
-            # 计算此文件夹的cid
-            new_dir_cid = get_str_md5("".join(inner_files_cid))
-            # 调用接口获取库中此文件夹的cid
-            old_file_cid = self.api.comparison(False, root)
-            # 判断是否需要更新
-            if new_dir_cid != old_file_cid:
-                # Log.logger.info("找到差异文件夹:" + root)
-                # Log.logger.info("更新此文件夹……")
-                # 更新文件夹
-                task_info = {
-                    "op": "update",
-                    "is_file": False,
-                    "path": root,
-                    "cid": new_dir_cid
-                }
-                dlist.rebuild_append(json.dumps(task_info))
-                # 更新文件夹下的所有文件
+        for folder_path in Config.MONITOR_DIR:
+            for root, dirs, files in os.walk(folder_path):
+                # 获取此文件夹下所有文件的cid
+                inner_files_cid = []
                 for file in files:
+                    inner_files_cid.append(cul_file_comparison_id(os.path.join(root, file)))
+                # 计算此文件夹的cid
+                new_dir_cid = get_str_md5("".join(inner_files_cid))
+                # 调用接口获取库中此文件夹的cid
+                old_file_cid = self.api.comparison(False, root)
+                # 判断是否需要更新
+                if new_dir_cid != old_file_cid:
+                    # Log.logger.info("找到差异文件夹:" + root)
+                    # Log.logger.info("更新此文件夹……")
+                    # 更新文件夹
                     task_info = {
                         "op": "update",
-                        "is_file": True,
-                        "path": os.path.join(root, file),
-                        "cid": cul_file_comparison_id(os.path.join(root, file))
+                        "is_file": False,
+                        "path": root,
+                        "cid": new_dir_cid
                     }
                     dlist.rebuild_append(json.dumps(task_info))
-                # Log.logger.info("已提交至任务列表！")
-                # 更新进度条
-                progress.update(1)
+                    # 更新文件夹下的所有文件
+                    for file in files:
+                        task_info = {
+                            "op": "update",
+                            "is_file": True,
+                            "path": os.path.join(root, file),
+                            "cid": cul_file_comparison_id(os.path.join(root, file))
+                        }
+                        dlist.rebuild_append(json.dumps(task_info))
+                    # Log.logger.info("已提交至任务列表！")
+                    # 更新进度条
+                    progress.update(1)
         # 关闭进度条
         progress.close()
         # 关闭dlist
         dlist.rebuild_over()
         Log.logger.info("遍历完成！")
-

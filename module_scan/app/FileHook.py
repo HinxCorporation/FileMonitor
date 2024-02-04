@@ -108,20 +108,15 @@ class FileEventHandler(FileSystemEventHandler):
         Log.logger.info(f"{'文件夹' if event.is_directory else '文件'} 被打开:{event.src_path}.")
 
 
-class Watcher:
+class ObserverObject:
     """
-    观察者类
-    定义Watcher类包含observer和event_handler
+    观察者实体对象类
     """
-
-    def __init__(self, dlist: Dlist):
-        """
-        观察者类构造函数
-        """
+    def __init__(self, event_handler, path, dlist: Dlist):
         self.dlist = dlist
-        self.event_handler = FileEventHandler(self.dlist)
+        self.event_handler = event_handler
         self.observer = Observer()
-        self.path = Config.MONITOR_DIR
+        self.observer_path = path
 
     def run(self):
         """
@@ -129,7 +124,7 @@ class Watcher:
         :return:
         """
         # 初始化观察者
-        self.observer.schedule(self.event_handler, self.path, recursive=True)
+        self.observer.schedule(self.event_handler, self.observer_path, recursive=True)
         # 启动观察者线程
         self.observer.start()
         # 等待子线程执行结束后，主线程才会结束
@@ -143,3 +138,36 @@ class Watcher:
         self.observer.stop()
         self.dlist.hook_over()
 
+
+class Watcher:
+    """
+    观察者Pool类
+    定义Watcher类包含observer和event_handler
+    """
+
+    def __init__(self, dlist: Dlist):
+        """
+        观察者类构造函数
+        """
+        # 观察者池
+        self.ObserverPool = []
+        # 向池中添加观察者
+        for folder_path in Config.MONITOR_DIR:
+            self.ObserverPool.append(ObserverObject(FileEventHandler(dlist), folder_path, dlist))
+        # self.dlist = dlist
+
+    def run(self):
+        """
+        启动观察者方法
+        :return:
+        """
+        for observerObject in self.ObserverPool:
+            observerObject.run()
+
+    def stop(self):
+        """
+        停止观察者方法
+        :return:
+        """
+        for observerObject in self.ObserverPool:
+            observerObject.stop()
