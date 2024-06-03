@@ -63,3 +63,4 @@ if __name__ == '__main__':
         time.sleep(1)
         # 周期性更新dlist
         module_scan.time_update_dlist()
+

@@ -235,8 +235,8 @@ class MysqlWorker(BaseWorkerAbstract):
         batch_operations = []
         query_effected = 0  # effected
         query_not_effected = 0  # not effected
-        for file_data in tqdm(file_data_list, desc=f"update {len(file_data_list)}", total=len(file_data_list),
-                              unit='queries'):
+        for file_data in tqdm(file_data_list, desc=f"update {len(file_data_list)}",
+                              total=len(file_data_list), unit='queries'):
             if not self.work_state_check():
                 break
             if self.connection and self.connection.is_connected():
