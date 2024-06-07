@@ -1,14 +1,13 @@
-import os
-
 import mysql.connector
 from mysql.connector import Error
 from tqdm import tqdm
 
 import AIWorker.Queries.mysql_queries as mq
 from tool.Logging import Log
-from . import utils
+from ..module_fs import utils
 from .BaseWorkerAbstract import BaseWorkerAbstract
 from .PartitionManager import PartitionManager
+from ..module_fs import *
 
 
 class MysqlWorker(BaseWorkerAbstract):
@@ -87,6 +86,7 @@ class MysqlWorker(BaseWorkerAbstract):
             touched_folders = set()
 
             def collect_data(_file_path: str):
+                # dir error, not excepts.
                 _data = utils.collect_file_data_ai_worker(_file_path)
                 _, _t3l = utils.get_folder_path(_file_path, 3)
                 new_pid = self.pm.require_partition_id(_t3l)
@@ -98,26 +98,35 @@ class MysqlWorker(BaseWorkerAbstract):
             if is_file:
                 file_data_list.append(collect_data(op_path))
             else:
-
-                Log.logger.info('begin travel folder and collect files')
-                # def a handler method to travel a folder
                 tqs = tqdm(desc=f"Collecting files", unit=' fs')
 
-                def travel_folder(path):
-                    if os.path.basename(path) == '@eaDir':
-                        return
+                def append_if_exist(path):
+                    tqs.update(1)
                     if path not in touched_folders:
                         touched_folders.add(path)
-                    for entry in os.scandir(path):
-                        if entry.is_file():
-                            tqs.update(1)
-                            file_data_list.append(collect_data(entry.path))
-                        else:
-                            travel_folder(entry.path)
+                    if os.path.isfile(path):
+                        data = collect_data(path)
+                        file_data_list.append(data)
 
-                # travel folder a collect all datas under that folders
-                travel_folder(op_path)
+                Log.logger.info('begin travel folder and collect files')
+                travel_folder(op_path, append_if_exist)
                 tqs.close()
+                # # def a handler method to travel a folder
+
+                # def travel_folder(path):
+                #     if os.path.basename(path) == '@eaDir':
+                #         return
+                #     if path not in touched_folders:
+                #         touched_folders.add(path)
+                #     for entry in os.scandir(path):
+                #         if entry.is_file():
+                #
+                #             file_data_list.append(collect_data(entry.path))
+                #         else:
+                #             travel_folder(entry.path)
+                #
+                # # travel folder a collect all datas under that folders
+                # travel_folder(op_path)
 
             if not self.check_partition_exist(pids):
                 Log.logger.error(f"Error Create Partitions , Could not Continue.")

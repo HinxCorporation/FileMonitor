@@ -1,11 +1,9 @@
 import datetime
 import hashlib
-import os
 import re
 
-# from DlistWorker import DWorker
-# D worker circle import
 from tool.Logging import Log
+from . import *
 
 dlist_rule = re.compile(r'(.+?)_(\d+)\.dlist$')
 
@@ -253,17 +251,46 @@ def get_folder_level(path, level):
             return os.path.join(*folders[:level + 1])
 
 
+# def folder_to_id(folder) -> str:
+#     """文件夹转ID"""
+#     folder = os.path.abspath(folder)
+#     lst = []
+#
+#     def handle(path):
+#         if os.path.isdir(path):
+#             _, foldername = os.path.split(path)
+#             lst += foldername + folder_to_id(path)
+#         else:
+#             # add a string
+#             lst += file_to_storage_id(path)
+#
+#     travel_folder(folder, handle)
+#
+#     # for entry in os.scandir(folder):
+#     #     if entry.is_dir():
+#     #         lst += entry.name + folder_to_id(entry.path)
+#     #     else:
+#     #         lst += file_to_storage_id(entry.path)
+#     hex_str_code = hashlib.sha256('|'.join(sorted(lst)).encode('utf-8')).hexdigest()
+#     # print(os.path.basename(folder) + ' -> ' + hex_str_code)
+#     return hex_str_code
+
 def folder_to_id(folder) -> str:
-    """文件夹转ID"""
+    """Convert a folder structure to a unique ID."""
     folder = os.path.abspath(folder)
     lst = []
-    for entry in os.scandir(folder):
-        if entry.is_dir():
-            lst += entry.name + folder_to_id(entry.path)
+
+    def handle(path):
+        if os.path.isdir(path):
+            _, current_folder_name = os.path.split(path)
+            lst.append(current_folder_name)
+            lst.append(folder_to_id(path))
         else:
-            lst += file_to_storage_id(entry.path)
+            lst.append(file_to_storage_id(path))
+
+    travel_folder(folder, handle)
+
     hex_str_code = hashlib.sha256('|'.join(sorted(lst)).encode('utf-8')).hexdigest()
-    # print(os.path.basename(folder) + ' -> ' + hex_str_code)
     return hex_str_code
 
 

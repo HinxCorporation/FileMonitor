@@ -1,8 +1,9 @@
 import time
+
 import AIWorker
 import module_scan
-from tool.FolderTree import FolderTree
 from INIReader import INIReader
+from tool.FolderTree import FolderTree
 
 
 def comparison_function(is_file, file_path):
@@ -63,4 +64,3 @@ if __name__ == '__main__':
         time.sleep(1)
         # 周期性更新dlist
         module_scan.time_update_dlist()
-
